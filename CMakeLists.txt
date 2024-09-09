@@ -1,32 +1,47 @@
 cmake_minimum_required(VERSION 3.12)
 project(helloworld_with_helloimgui)
-set(CMAKE_CXX_STANDARD 17)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard to use")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_compile_options(-march=native -O3)
+include(FetchContent)
+
 
 # Build hello_imgui
 # =================
-# 1/  Option 1: if you added hello_imgui as a subfolder, you can add it to your project with:
+
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "Disable GLFW tests" FORCE)
+FetchContent_Declare(
+    glfw3
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.3.4
+)
+FetchContent_MakeAvailable(glfw3)
+message(STATUS ${glfw3_BINARY_DIR})
+set(glfw3_DIR ${glfw3_BINARY_DIR}/src)
+
+
 if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/hello_imgui)
-    add_subdirectory(external/hello_imgui)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/hello_imgui)
 endif()
 
-# 2/  Option 2: simply fetch hello_imgui during the build
-if (NOT TARGET hello_imgui)
-    message(STATUS "Fetching hello_imgui")
-    include(FetchContent)
-    FetchContent_Declare(hello_imgui GIT_REPOSITORY https://github.com/pthom/hello_imgui.git GIT_TAG master)
-    FetchContent_MakeAvailable(hello_imgui)
-endif()
-
-# 3/  Option 3: via vcpkg
-# i/ You can install hello_imgui via vcpkg with:
-#     vcpkg install "hello-imgui[opengl3-binding,glfw-binding]"
-# ii/ Then you can use it inside CMake with:
-#     find_package(hello-imgui CONFIG REQUIRED)
+FetchContent_Declare(
+    portaudio
+    GIT_REPOSITORY git@github.com:PortAudio/portaudio.git
+    GIT_TAG        v19.7.0
+)
+FetchContent_MakeAvailable(portaudio)
 
 
 # Build your app
 # ==============
 hello_imgui_add_app(hello_world_ hello_world.main.cpp)
+target_link_libraries(hello_world_ PRIVATE portaudio)
+target_include_directories(hello_world_ PRIVATE
+    ${clover_SOURCE_DIR}/include
+)
 
 
 # hello_imgui_add_app is a helper function, similar to cmake's "add_executable"
